@@ -1,15 +1,32 @@
+from GeometricAux import *
+
+
 class Parser(object):
-    def __init__(self,fileDir):
-        self.segm
+    def __init__(self, fileDir):
+
+        self.testCases = {}
+        self.allPoints = set()
 
         with open(fileDir) as file:
-            self.numOfSets = int(file.readline().strip(' '))
-            for _ in range(self.numOfSets):
-                numOfSeg=int(file.readline().strip(' '))
+            numOfSets = int(file.readline().strip(' '))
+            for numOfTestCase in range(numOfSets):
+                numOfSeg = int(file.readline().strip(' '))
+                setOfSegments = set()
                 for _ in range(numOfSeg):
-                    points=[float(num) for num in file.readline().split(' ')]
-                    self.
+                    points = [float(num) for num in file.readline().split(' ')]
+                    segment = Segment(Point(points[0], points[1]), Point(points[2], points[3]))
+                    setOfSegments.add(segment)
+                    self.allPoints.union()
+                    #ToDo
+                self.testCases[numOfTestCase] = setOfSegments
+
+    def getResult(self):
+        return self.testCases
+
+    def getAllPoints(self):
+        return self.allPoints
 
 
 if __name__ == "__main__":
-    Parser("tests/test1.in")
+    v=Parser("./tests/test1.in")
+    print(v.getAllPoints())
