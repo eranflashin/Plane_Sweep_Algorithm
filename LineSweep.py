@@ -1,6 +1,7 @@
 import heapq
 from bintrees.avltree import AVLTree
 from GeometricAux import *
+from Parser import Parser
 
 
 class EventType(Enum):
@@ -49,17 +50,20 @@ class LineStatus(object):
     def remove(self, seg):
         self.container.remove(seg.compareRank())
 
-    def adjIntersections(self, seg):
+    def adjSeg(self, seg):
         rank = seg.compareRank()
         try:
             (_, nextSeg) = self.container.succ_item(rank)
         except KeyError:
             nextSeg = None
-
         try:
             (_, prevSeg) = self.container.prev_item(rank)
         except KeyError:
             prevSeg = None
+        return nextSeg, prevSeg
+
+    def adjIntersections(self, seg):
+        nextSeg, prevSeg = self.adjSeg(seg)
 
         if nextSeg is not None:
             interNext = seg.intersectsWith(nextSeg)
@@ -72,7 +76,6 @@ class LineStatus(object):
             interPrev = None
 
         return (interPrev, prevSeg), (interNext, nextSeg)
-
 
 class LineSweep(object):
     def __init__(self, segmentsSet):
@@ -101,7 +104,14 @@ class LineSweep(object):
 
             elif eventType == EventType.END_POINT:
                 [seg] = segList
+                nextSeg, prevSeg = self.lineStatus.adjSeg(seg)
                 self.lineStatus.remove(seg)
+                if nextSeg is not None and prevSeg is not None:
+                    intersection = nextSeg.intersectsWith(prevSeg)
+                    if intersection is not None and self.foundIntersections.get(intersection) != 0:
+                        self.eventsQueue.pushIntersectionEvent(intersection, nextSeg, prevSeg)  # check
+                        self.foundIntersections.insert(intersection, 0)
+
             elif eventType == EventType.INTERSECTION:
                 self.numOfIntersections += 1
                 [upperSeg, lowerSeg] = segList
@@ -115,61 +125,7 @@ class LineSweep(object):
                 self.processAdjIntersections(upperSeg)
                 self.processAdjIntersections(lowerSeg)
 
+        return self
 
-if __name__ == "__main__":
-    s1 = Segment(Point(1, 1), Point(4, 4))
-    s2 = Segment(Point(2, 2), Point(3, 1.5))
-
-    LineSweep({s1, s2}).run()
-
-# if eventType == EventType.START_POINT:
-#     seg = seg[0]
-#     self.lineStatus.insert((seg.getStartPoint().getY(), seg), seg)
-#
-#     try:
-#         (_, nextSeg) = self.lineStatus.succ_item((seg.getStartPoint().getY(), seg))
-#     except:
-#         nextSeg = None
-#
-#     try:
-#         (_, prevSeg) = self.lineStatus.prev_item((seg.getStartPoint().getY(), seg))
-#     except:
-#         prevSeg = None
-#
-#     if nextSeg is not None:
-#         inter = seg.intersectsWith(nextSeg)
-#         if inter is not None:
-#             heapq.heappush(self.eventsQueue, (inter, [seg, nextSeg], EventType.INTERSECTION))
-#
-#     if prevSeg is not None:
-#         inter = seg.intersectsWith(prevSeg)
-#         if inter is not None:
-#             heapq.heappush(self.eventsQueue, (inter, [seg, prevSeg], EventType.INTERSECTION))
-#
-# elif eventType == EventType.END_POINT:
-#     seg = seg[0]
-#
-#     try:
-#         (_, nextSeg) = self.lineStatus.succ_item((seg.getStartPoint().getY(), seg))
-#     except:
-#         nextSeg = None
-#
-#     try:
-#         (_, prevSeg) = self.lineStatus.prev_item((seg.getStartPoint().getY(), seg))
-#     except:
-#         prevSeg = None
-#
-#     if nextSeg is not None:
-#         inter = seg.intersectsWith(nextSeg)
-#         if inter is not None:
-#             heapq.heappush(self.eventsQueue, (inter, [seg, nextSeg], EventType.INTERSECTION))
-#
-#     if prevSeg is not None:
-#         inter = seg.intersectsWith(prevSeg)
-#         if inter is not None:
-#             heapq.heappush(self.eventsQueue, (inter, [seg, prevSeg], EventType.INTERSECTION))
-#
-#     self.lineStatus.remove((seg.getStartPoint().getY(), seg))
-#
-# elif eventType == EventType.INTERSECTION:
-#     self.numOfIntersections += 1
+    def getResult(self):
+        return self.numOfIntersections
