@@ -5,7 +5,6 @@ class Parser(object):
     def __init__(self, fileDir):
 
         self.testCases = {}
-        self.allPoints = set()
 
         with open(fileDir) as file:
             numOfSets = int(file.readline().strip(' '))
@@ -16,17 +15,8 @@ class Parser(object):
                     points = [float(num) for num in file.readline().split(' ')]
                     segment = Segment(Point(points[0], points[1]), Point(points[2], points[3]))
                     setOfSegments.add(segment)
-                    self.allPoints.union()
-                    #ToDo
                 self.testCases[numOfTestCase] = setOfSegments
 
     def getResult(self):
         return self.testCases
 
-    def getAllPoints(self):
-        return self.allPoints
-
-
-if __name__ == "__main__":
-    v=Parser("./tests/test1.in")
-    print(v.getAllPoints())
