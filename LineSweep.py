@@ -79,6 +79,17 @@ class LineSweep(object):
         self.eventsQueue = EventQueue(segmentsSet)
         self.lineStatus = LineStatus()
         self.numOfIntersections = 0
+        self.foundIntersections = AVLTree()
+
+    def processAdjIntersections(self, seg):
+        ((intersectionPrev, prevSeg), (intersectionNext, nextSeg)) = self.lineStatus.adjIntersections(seg)
+        if intersectionPrev is not None and self.foundIntersections.get(intersectionPrev) != 0:
+            self.eventsQueue.pushIntersectionEvent(intersectionPrev, prevSeg, seg)
+            self.foundIntersections.insert(intersectionPrev, 0)
+        if intersectionNext is not None and self.foundIntersections.get(intersectionNext) != 0:
+            self.eventsQueue.pushIntersectionEvent(intersectionNext, seg, nextSeg)
+            self.foundIntersections.insert(intersectionNext, 0)
+
 
     def run(self):
         while not self.eventsQueue.isEmpty():
@@ -86,13 +97,7 @@ class LineSweep(object):
             if eventType == EventType.START_POINT:
                 [seg] = segList
                 self.lineStatus.insert(seg)
-                ((intersectionPrev, prevSeg), (intersectionNext, nextSeg)) = self.lineStatus.adjIntersections(seg)
-
-                if intersectionPrev is not None:
-                    self.eventsQueue.pushIntersectionEvent(intersectionPrev, prevSeg, seg)
-
-                if intersectionNext is not None:
-                    self.eventsQueue.pushIntersectionEvent(intersectionNext, seg, nextSeg)
+                self.processAdjIntersections(seg)
 
             elif eventType == EventType.END_POINT:
                 [seg] = segList
@@ -107,23 +112,8 @@ class LineSweep(object):
                 self.lineStatus.insert(upperSeg)
                 self.lineStatus.insert(lowerSeg)
 
-                ((intersectionPrev, prevSeg), (intersectionNext, nextSeg)) = self.lineStatus.adjIntersections(upperSeg)
-
-                if intersectionPrev is not None and point < intersectionPrev:
-                    self.eventsQueue.pushIntersectionEvent(intersectionPrev, prevSeg, upperSeg)
-
-                if intersectionNext is not None and point < intersectionNext:
-                    self.eventsQueue.pushIntersectionEvent(intersectionNext, upperSeg, nextSeg)
-
-                ((intersectionPrev, prevSeg), (intersectionNext, nextSeg)) = self.lineStatus.adjIntersections(lowerSeg)
-
-                if intersectionPrev is not None and point < intersectionPrev:
-                    self.eventsQueue.pushIntersectionEvent(intersectionPrev, prevSeg, lowerSeg)
-
-                if intersectionNext is not None and point < intersectionNext:
-                    self.eventsQueue.pushIntersectionEvent(intersectionNext, lowerSeg, nextSeg)
-
-                    # not good need to check explicitly if already in heap
+                self.processAdjIntersections(upperSeg)
+                self.processAdjIntersections(lowerSeg)
 
 
 if __name__ == "__main__":

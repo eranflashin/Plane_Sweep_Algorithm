@@ -34,6 +34,9 @@ class Point(object):
     def __lt__(self, other):
         return self.x < other.x
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
     @staticmethod
     def orientation(point1, point2, point3) -> Sign:
         det = point1.getX() * (point2.getY() - point3.getY()) - point1.getY() * (point2.getX() - point3.getX()) + \
