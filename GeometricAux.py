@@ -104,7 +104,7 @@ class Segment(object):
 
         X = q1.getX() * seg2Param + (1 - seg2Param) * q2.getX()
         Y = q1.getY() * seg2Param + (1 - seg2Param) * q2.getY()
-        return Point(X, Y)
+        return Point(round(X, 2), round(Y, 2))
 
     def setLastVisitedPoint(self, point):
         self.lastVisitedPoint = point
