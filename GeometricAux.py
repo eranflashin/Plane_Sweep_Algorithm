@@ -104,14 +104,14 @@ class Segment(object):
 
         X = q1.getX() * seg2Param + (1 - seg2Param) * q2.getX()
         Y = q1.getY() * seg2Param + (1 - seg2Param) * q2.getY()
-        return Point(round(X, 2), round(Y, 2))
+        return Point(round(X, 7), round(Y, 7))
 
     def setLastVisitedPoint(self, point):
         self.lastVisitedPoint = point
 
     def compareRank(self):
         return self.lastVisitedPoint.y + (
-                0.01 * ((self.endPoint.y - self.lastVisitedPoint.y) / (self.endPoint.x - self.lastVisitedPoint.x)))
+                0.0000001 * ((self.endPoint.y - self.lastVisitedPoint.y) / (self.endPoint.x - self.lastVisitedPoint.x)))
 
     def __str__(self):
         return "start: {0} end: {1}".format(self.startPoint, self.endPoint)
