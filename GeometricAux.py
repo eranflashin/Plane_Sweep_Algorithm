@@ -22,25 +22,31 @@ class Point(object):
         self.x = x
         self.y = y
 
-    def getX(self):
-        return self.x
-
-    def getY(self):
-        return self.y
-
     def distanceFrom(self, otherPoint):
         return math.hypot(otherPoint.x - self.x, otherPoint.y - self.y)
 
     def __lt__(self, other):
+        if self.x == other.x:
+            return self.y < other.y
         return self.x < other.x
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
+    def __le__(self, other):
+        return self < other or self == other
+
+    def __gt__(self, other):
+        return not (self <= other)
+
+    def __ge__(self, other):
+        return self > other or self == other
+
     @staticmethod
     def orientation(point1, point2, point3) -> Sign:
-        det = point1.getX() * (point2.getY() - point3.getY()) - point1.getY() * (point2.getX() - point3.getX()) + \
-              (point2.getX() * point3.getY() - point2.getY() * point3.getX())
+        det = point1.x * (point2.y - point3.y) - point1.y * (point2.x - point3.x) + \
+              (point2.x * point3.y - point2.y * point3.x)
+        det = round(det, 6)
         return Sign.getSign(det)
 
     def __str__(self):
@@ -57,12 +63,7 @@ class Segment(object):
             self.endPoint = point1
 
         self.lastVisitedPoint = self.startPoint
-
-    def getStartPoint(self):
-        return self.startPoint
-
-    def getEndPoint(self):
-        return self.endPoint
+        self.slope = round((self.endPoint.y - self.startPoint.y) / (self.endPoint.x - self.startPoint.x), 6)
 
     def containsPoint(self, point):
         return self.startPoint.distanceFrom(self.endPoint) == \
@@ -93,25 +94,51 @@ class Segment(object):
 
     @staticmethod
     def getIntersectionPoint(seg1, seg2):
-        p1 = seg1.getStartPoint()
-        p2 = seg1.getEndPoint()
-        q1 = seg2.getStartPoint()
-        q2 = seg2.getEndPoint()
-        seg2Param = ((q2.getX() - p2.getX()) - (
-                ((q2.getY() - p2.getY()) * (p1.getX() - p2.getX())) / (p1.getY() - p2.getY()))) \
-                    / ((((p1.getX() - p2.getX()) * (q1.getY() - q2.getY())) / (p1.getY() - p2.getY())) - (
-                q1.getX() - q2.getX()))
+        p1 = seg1.startPoint
+        p2 = seg1.endPoint
+        q1 = seg2.startPoint
+        q2 = seg2.endPoint
 
-        X = q1.getX() * seg2Param + (1 - seg2Param) * q2.getX()
-        Y = q1.getY() * seg2Param + (1 - seg2Param) * q2.getY()
+        if seg1.slope == 0:
+            Y = p1.y
+            Param = (Y - q2.y) / (q1.y - q2.y)
+            X = q1.x * Param + (1 - Param) * q2.x
+        elif seg2.slope == 0:
+            Y = q1.y
+            Param = (Y - p2.y) / (p1.y - p2.y)
+            X = p1.x * Param + (1 - Param) * p2.x
+        else:
+
+            seg2Param = ((q2.x - p2.x) - (
+                    ((q2.y - p2.y) * (p1.x - p2.x)) / (p1.y - p2.y))) \
+                        / ((((p1.x - p2.x) * (q1.y - q2.y)) / (p1.y - p2.y)) - (
+                    q1.x - q2.x))
+
+            X = q1.x * seg2Param + (1 - seg2Param) * q2.x
+            Y = q1.y * seg2Param + (1 - seg2Param) * q2.y
+
         return Point(round(X, 7), round(Y, 7))
 
     def setLastVisitedPoint(self, point):
         self.lastVisitedPoint = point
 
-    def compareRank(self):
-        return self.lastVisitedPoint.y + (
-                0.0000001 * ((self.endPoint.y - self.lastVisitedPoint.y) / (self.endPoint.x - self.lastVisitedPoint.x)))
+    def calcYValueByX(self, x):
+        if self.slope == 0:
+            return self.startPoint.y
+
+        st = self.startPoint
+        en = self.endPoint
+        return round((en.y * st.x - en.x * st.y - en.y * x + st.y * x) / (st.x - en.x), 7)
+
+    def __lt__(self, other):
+        lineSweepPos = max(self.lastVisitedPoint.x, other.lastVisitedPoint.x)
+
+        selfY = self.calcYValueByX(lineSweepPos)
+        otherY = other.calcYValueByX(lineSweepPos)
+
+        if selfY == otherY:
+            return self.slope < other.slope
+        return selfY < otherY
 
     def __str__(self):
         return "start: {0} end: {1}".format(self.startPoint, self.endPoint)
