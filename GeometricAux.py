@@ -2,6 +2,10 @@ import math
 from enum import Enum
 
 
+def epsilon_eq(x, y, epsilon):
+    return abs(x - y) <= epsilon
+
+
 class Sign(Enum):
     POSITIVE = 1
     ZERO = 0
@@ -136,7 +140,7 @@ class Segment(object):
         selfY = self.calcYValueByX(lineSweepPos)
         otherY = other.calcYValueByX(lineSweepPos)
 
-        if selfY == otherY:
+        if epsilon_eq(selfY, otherY, 0.000001):
             return self.slope < other.slope
         return selfY < otherY
 
