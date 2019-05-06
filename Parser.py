@@ -2,6 +2,10 @@ from GeometricAux import *
 
 
 class Parser(object):
+    """
+        This class is responsible for transforming the given input file to
+        a set of entries {i -> setOfSegments(i)} , for i=0,1,..
+    """
     def __init__(self, fileDir):
 
         self.testCases = {}

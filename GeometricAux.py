@@ -7,6 +7,9 @@ def epsilon_eq(x, y, epsilon):
 
 
 class Sign(Enum):
+    """
+        Represents the sign of the triangle orientation computation
+    """
     POSITIVE = 1
     ZERO = 0
     NEGATIVE = -1
@@ -30,6 +33,10 @@ class Point(object):
         return math.hypot(otherPoint.x - self.x, otherPoint.y - self.y)
 
     def __lt__(self, other):
+        """
+        :param other:
+        :return: true iff self < other. < by x firstly, by y secondly
+        """
         if self.x == other.x:
             return self.y < other.y
         return self.x < other.x
@@ -48,6 +55,9 @@ class Point(object):
 
     @staticmethod
     def orientation(point1, point2, point3) -> Sign:
+        """
+            triangle orientation computation as was taught in class
+        """
         det = point1.x * (point2.y - point3.y) - point1.y * (point2.x - point3.x) + \
               (point2.x * point3.y - point2.y * point3.x)
         det = round(det, 6)
@@ -66,14 +76,27 @@ class Segment(object):
             self.startPoint = point2
             self.endPoint = point1
 
+        """
+            lastVisitedPoint- the most recently inspected point on the segment
+        """
         self.lastVisitedPoint = self.startPoint
         self.slope = round((self.endPoint.y - self.startPoint.y) / (self.endPoint.x - self.startPoint.x), 6)
 
     def containsPoint(self, point):
+        """
+
+        :param point:
+        :return: true iff point belongs to Self (segment)
+        """
         return self.startPoint.distanceFrom(self.endPoint) == \
                self.startPoint.distanceFrom(point) + point.distanceFrom(self.endPoint)
 
     def intersectsWith(self, otherSeg):
+        """
+
+        :param otherSeg:
+        :return: None if seg does not intersect with otherSeg, otherwise the intersection point
+        """
         orientation1 = Point.orientation(self.startPoint, self.endPoint, otherSeg.startPoint)
         orientation2 = Point.orientation(self.startPoint, self.endPoint, otherSeg.endPoint)
         orientation3 = Point.orientation(otherSeg.startPoint, otherSeg.endPoint, self.startPoint)
@@ -98,6 +121,9 @@ class Segment(object):
 
     @staticmethod
     def getIntersectionPoint(seg1, seg2):
+        """
+            Assumption: seg1 intersects with seg2
+        """
         p1 = seg1.startPoint
         p2 = seg1.endPoint
         q1 = seg2.startPoint
@@ -127,6 +153,10 @@ class Segment(object):
         self.lastVisitedPoint = point
 
     def calcYValueByX(self, x):
+        """
+            given x, calculates the y value corresponding to the point (x,y) belonging to self segment
+            Assumption: x is valid
+        """
         if self.slope == 0:
             return self.startPoint.y
 
@@ -135,6 +165,13 @@ class Segment(object):
         return round((en.y * st.x - en.x * st.y - en.y * x + st.y * x) / (st.x - en.x), 7)
 
     def __lt__(self, other):
+        """
+            defines a < operator for segments: A is less than B if
+            in relation to the sweep line which intersects them both,
+            A's y value of intersection with the sweep line is less than that of B
+            or in case their intersection points with sweep line overlap then
+            A's slope is smaller
+        """
         lineSweepPos = max(self.lastVisitedPoint.x, other.lastVisitedPoint.x)
 
         selfY = self.calcYValueByX(lineSweepPos)

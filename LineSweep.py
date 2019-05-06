@@ -1,6 +1,7 @@
 import heapq
 from GeometricAux import *
-from AVL import AVL
+from Avl.AVL import AVL
+
 
 class EventType(Enum):
     START_POINT = 0
@@ -8,16 +9,28 @@ class EventType(Enum):
     END_POINT = 2
 
     def __le__(self, other):
+        """
+            defines priority among the event types: Intersection is weaker than start but stronger than
+            ending
+        """
         return self.value <= other.value
 
 
 class EventQueueItem(object):
+    """
+        This class wraps the point with its type and the segment it belongs to
+    """
+
     def __init__(self, point, pointType, segList):
         self.point = point
         self.pointType = pointType
         self.segList = segList
 
     def __lt__(self, other):
+        """
+            Definition of < between the event queue items:
+            firstly by x, if same x then by type
+        """
         if self.point.x < other.point.x:
             return True
         elif self.point.x == other.point.x:
@@ -31,6 +44,10 @@ class EventQueueItem(object):
 
 class EventQueue(object):
     def __init__(self, segmentsSet):
+        """
+            Given the set of segments, initialize the event queue by inserting two end-points
+            per segment
+        """
         self.heap = [EventQueueItem(seg.startPoint, EventType.START_POINT, [seg]) for seg in
                      segmentsSet] + [EventQueueItem(seg.endPoint, EventType.END_POINT, [seg]) for seg in
                                      segmentsSet]
@@ -47,6 +64,11 @@ class EventQueue(object):
 
 
 class LineStatus(object):
+    """
+        This class represents a sweep line status : AVL tree containing all currently
+        intersecting segments
+    """
+
     def __init__(self):
         self.container = AVL()
 
@@ -57,7 +79,9 @@ class LineStatus(object):
         self.container.delete(seg)
 
     def adjSeg(self, seg):
-
+        """
+            given a segment in the self line status, returns both the adjacent segments
+        """
         nextSeg = self.container.next_larger(seg)
 
         prevSeg = self.container.prev_smaller(seg)
@@ -71,6 +95,10 @@ class LineStatus(object):
         return nextSeg, prevSeg
 
     def adjIntersections(self, seg):
+        """
+            Given a segment in self line status, returns the intersections of the segments with
+            its adjacent segments (if exist, otherwise None)
+        """
         nextSeg, prevSeg = self.adjSeg(seg)
 
         if nextSeg is not None:
@@ -94,6 +122,10 @@ class LineSweep(object):
         self.foundIntersections = AVL()
 
     def processAdjIntersections(self, seg):
+        """
+            given a segment in the line status, inserts into event queue the intersection points of the
+            segment with the adjacent segments (if exist)
+        """
         ((intersectionPrev, prevSeg), (intersectionNext, nextSeg)) = self.lineStatus.adjIntersections(seg)
         if intersectionPrev is not None and self.foundIntersections.find(intersectionPrev) is None:
             self.eventsQueue.pushIntersectionEvent(intersectionPrev, lowerSeg=prevSeg, upperSeg=seg)
@@ -103,10 +135,15 @@ class LineSweep(object):
             self.foundIntersections.insert(intersectionNext)
 
     def run(self):
+        """
+            This method runs the whole algorithm
+
+        """
         while not self.eventsQueue.isEmpty():
-            (point, eventType, segList) = self.eventsQueue.popEvent().getData()
+            (point, eventType, segList) = self.eventsQueue.popEvent().getData()  # get the next eventQ item
+
             if eventType == EventType.START_POINT:
-                [seg] = segList
+                [seg] = segList  # it is a start point so only one segment is relevant
                 self.lineStatus.insert(seg)
                 self.processAdjIntersections(seg)
 
@@ -122,7 +159,10 @@ class LineSweep(object):
 
             elif eventType == EventType.INTERSECTION:
                 self.numOfIntersections += 1
-                [upperSeg, lowerSeg] = segList
+                [upperSeg, lowerSeg] = segList  # it is an intersection point so two segments are relevant
+
+                # swap the segments in the line status by removing them, updating their last visited point
+                # and inserting them back
                 self.lineStatus.remove(upperSeg)
                 self.lineStatus.remove(lowerSeg)
                 upperSeg.setLastVisitedPoint(point)
